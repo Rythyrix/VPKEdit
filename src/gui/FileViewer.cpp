@@ -2,6 +2,7 @@
 
 #include <QHBoxLayout>
 
+#include "previews/AudioPreview.h"
 #include "previews/DirPreview.h"
 #include "previews/ImagePreview.h"
 #include "previews/TextPreview.h"
@@ -15,6 +16,9 @@ FileViewer::FileViewer(Window* window_, QWidget* parent)
         , window(window_) {
     auto* layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
+
+    this->audioPreview = new AudioPreview(this);
+    layout->addWidget(this->audioPreview);
 
     this->dirPreview = new DirPreview(this);
     layout->addWidget(this->dirPreview);
@@ -48,6 +52,7 @@ void FileViewer::displayEntry(const QString& path) {
         path.endsWith(".md")  ||
         path.endsWith(".gi")  ||
         path.endsWith(".res") ||
+        path.endsWith(".rad") ||
         path.endsWith(".nut") ||
         path.endsWith(".lua") ||
         path.endsWith(".gm")  ||
@@ -68,6 +73,10 @@ void FileViewer::displayEntry(const QString& path) {
         // VTF (texture)
         this->vtfPreview->setImage(this->window->readBinaryEntry(path));
         this->setVTFPreviewVisible();
+    } else if (path.endsWith(".mp3")) {
+        // Audio
+        this->audioPreview->setAudio(this->window->readBinaryEntry(path), "_" + path.sliced(path.lastIndexOf('.')));
+        this->setAudioPreviewVisible();
     }
 }
 
@@ -86,7 +95,16 @@ void FileViewer::clearContents() {
     this->setTextPreviewVisible();
 }
 
+void FileViewer::setAudioPreviewVisible() {
+    this->audioPreview->show();
+    this->dirPreview->hide();
+    this->imagePreview->hide();
+    this->textPreview->hide();
+    this->vtfPreview->hide();
+}
+
 void FileViewer::setDirPreviewVisible() {
+    this->audioPreview->hide();
     this->dirPreview->show();
     this->imagePreview->hide();
     this->textPreview->hide();
@@ -94,6 +112,7 @@ void FileViewer::setDirPreviewVisible() {
 }
 
 void FileViewer::setImagePreviewVisible() {
+    this->audioPreview->hide();
     this->dirPreview->hide();
     this->imagePreview->show();
     this->textPreview->hide();
@@ -101,6 +120,7 @@ void FileViewer::setImagePreviewVisible() {
 }
 
 void FileViewer::setTextPreviewVisible() {
+    this->audioPreview->hide();
     this->dirPreview->hide();
     this->imagePreview->hide();
     this->textPreview->show();
@@ -108,6 +128,7 @@ void FileViewer::setTextPreviewVisible() {
 }
 
 void FileViewer::setVTFPreviewVisible() {
+    this->audioPreview->hide();
     this->dirPreview->hide();
     this->imagePreview->hide();
     this->textPreview->hide();

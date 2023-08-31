@@ -71,6 +71,8 @@ if(VPKTOOL_BUILD_GUI)
 
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/res/res.qrc"
 
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/previews/AudioPreview.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/previews/AudioPreview.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/previews/DirPreview.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/previews/DirPreview.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/previews/ImagePreview.h"
@@ -95,8 +97,8 @@ if(VPKTOOL_BUILD_GUI)
             ${PROJECT_NAME} WIN32
             ${${PROJECT_NAME}_SOURCES})
 
-    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
-    target_link_libraries(${PROJECT_NAME} PRIVATE lib${PROJECT_NAME} vtflib keyvalues SAPP Qt6::Core Qt6::Gui Qt6::Widgets)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Multimedia)
+    target_link_libraries(${PROJECT_NAME} PRIVATE lib${PROJECT_NAME} vtflib keyvalues SAPP Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Multimedia)
     target_include_directories(
             ${PROJECT_NAME} PRIVATE
             "${CMAKE_CURRENT_SOURCE_DIR}/include"
@@ -104,6 +106,8 @@ if(VPKTOOL_BUILD_GUI)
             "${QT_INCLUDE}/QtCore"
             "${QT_INCLUDE}/QtGui"
             "${QT_INCLUDE}/QtWidgets"
+            "${QT_INCLUDE}/QtNetwork"
+            "${QT_INCLUDE}/QtMultimedia"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/thirdparty/sapp/include") # For some reason this one isn't populating automatically
     if(WIN32 AND MSVC)
         target_link_options(
@@ -117,7 +121,7 @@ if(VPKTOOL_BUILD_GUI)
             CONFIGURATIONS ${CMAKE_BUILD_TYPE}
             RUNTIME DESTINATION .
             LIBRARY DESTINATION .)
-    install(IMPORTED_RUNTIME_ARTIFACTS Qt6::Core Qt6::Gui Qt6::Widgets
+    install(IMPORTED_RUNTIME_ARTIFACTS Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Multimedia
             RUNTIME DESTINATION .
             LIBRARY DESTINATION .)
     if(WIN32)
@@ -129,6 +133,8 @@ if(VPKTOOL_BUILD_GUI)
                     DESTINATION imageformats)
             install(FILES "${QT_BASEDIR}/plugins/imageformats/qwebpd.dll"
                     DESTINATION imageformats)
+            install(FILES "${QT_BASEDIR}/plugins/multimedia/ffmpegmediaplugind.dll"
+                    DESTINATION multimedia)
             install(FILES "${QT_BASEDIR}/plugins/platforms/qwindowsd.dll"
                     DESTINATION platforms)
             install(FILES "${QT_BASEDIR}/plugins/styles/qwindowsvistastyled.dll"
@@ -140,49 +146,59 @@ if(VPKTOOL_BUILD_GUI)
                     DESTINATION imageformats)
             install(FILES "${QT_BASEDIR}/plugins/imageformats/qwebp.dll"
                     DESTINATION imageformats)
+            install(FILES "${QT_BASEDIR}/plugins/multimedia/ffmpegmediaplugin.dll"
+                    DESTINATION multimedia)
             install(FILES "${QT_BASEDIR}/plugins/platforms/qwindows.dll"
                     DESTINATION platforms)
             install(FILES "${QT_BASEDIR}/plugins/styles/qwindowsvistastyle.dll"
                     DESTINATION styles)
         endif()
     elseif(UNIX)
-        install(FILES
-                    "${QT_BASEDIR}/plugins/platforms/libqminimal.so"
-                    "${QT_BASEDIR}/plugins/platforms/libqxcb.so"
-                DESTINATION platforms)
-        install(FILES
-                    "${QT_BASEDIR}/lib/libicui18n.so.56"
-                    "${QT_BASEDIR}/lib/libicuuc.so.56"
-                    "${QT_BASEDIR}/lib/libicudata.so.56"
-                DESTINATION .)
+        message(STATUS "No installer for Linux yet, skipping install() setup...")
     endif()
 
     # Copy these so the user doesn't have to
     if(WIN32)
         if(CMAKE_BUILD_TYPE MATCHES Debug)
-            configure_file("${QT_BASEDIR}/bin/Qt6Cored.dll"    "${CMAKE_BINARY_DIR}/Qt6Cored.dll"    COPYONLY)
-            configure_file("${QT_BASEDIR}/bin/Qt6Guid.dll"     "${CMAKE_BINARY_DIR}/Qt6Guid.dll"     COPYONLY)
-            configure_file("${QT_BASEDIR}/bin/Qt6Widgetsd.dll" "${CMAKE_BINARY_DIR}/Qt6Widgetsd.dll" COPYONLY)
-            configure_file("${QT_BASEDIR}/plugins/imageformats/qjpegd.dll"        "${CMAKE_BINARY_DIR}/imageformats/qjpegd.dll"        COPYONLY)
-            configure_file("${QT_BASEDIR}/plugins/imageformats/qtgad.dll"         "${CMAKE_BINARY_DIR}/imageformats/qtgad.dll"         COPYONLY)
-            configure_file("${QT_BASEDIR}/plugins/imageformats/qwebpd.dll"        "${CMAKE_BINARY_DIR}/imageformats/qwebpd.dll"        COPYONLY)
-            configure_file("${QT_BASEDIR}/plugins/platforms/qwindowsd.dll"        "${CMAKE_BINARY_DIR}/platforms/qwindowsd.dll"        COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Cored.dll"       "${CMAKE_BINARY_DIR}/Qt6Cored.dll"       COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Guid.dll"        "${CMAKE_BINARY_DIR}/Qt6Guid.dll"        COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Widgetsd.dll"    "${CMAKE_BINARY_DIR}/Qt6Widgetsd.dll"    COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Networkd.dll"    "${CMAKE_BINARY_DIR}/Qt6Networkd.dll"    COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Multimediad.dll" "${CMAKE_BINARY_DIR}/Qt6Multimediad.dll" COPYONLY)
+
+            configure_file("${QT_BASEDIR}/plugins/imageformats/qjpegd.dll" "${CMAKE_BINARY_DIR}/imageformats/qjpegd.dll" COPYONLY)
+            configure_file("${QT_BASEDIR}/plugins/imageformats/qtgad.dll"  "${CMAKE_BINARY_DIR}/imageformats/qtgad.dll"  COPYONLY)
+            configure_file("${QT_BASEDIR}/plugins/imageformats/qwebpd.dll" "${CMAKE_BINARY_DIR}/imageformats/qwebpd.dll" COPYONLY)
+
+            configure_file("${QT_BASEDIR}/plugins/multimedia/ffmpegmediaplugind.dll" "${CMAKE_BINARY_DIR}/multimedia/ffmpegmediaplugind.dll" COPYONLY)
+
+            configure_file("${QT_BASEDIR}/plugins/platforms/qwindowsd.dll" "${CMAKE_BINARY_DIR}/platforms/qwindowsd.dll" COPYONLY)
+
             configure_file("${QT_BASEDIR}/plugins/styles/qwindowsvistastyled.dll" "${CMAKE_BINARY_DIR}/styles/qwindowsvistastyled.dll" COPYONLY)
         else()
-            configure_file("${QT_BASEDIR}/bin/Qt6Core.dll"    "${CMAKE_BINARY_DIR}/Qt6Core.dll"    COPYONLY)
-            configure_file("${QT_BASEDIR}/bin/Qt6Gui.dll"     "${CMAKE_BINARY_DIR}/Qt6Gui.dll"     COPYONLY)
-            configure_file("${QT_BASEDIR}/bin/Qt6Widgets.dll" "${CMAKE_BINARY_DIR}/Qt6Widgets.dll" COPYONLY)
-            configure_file("${QT_BASEDIR}/plugins/imageformats/qjpeg.dll"        "${CMAKE_BINARY_DIR}/imageformats/qjpeg.dll"        COPYONLY)
-            configure_file("${QT_BASEDIR}/plugins/imageformats/qtga.dll"         "${CMAKE_BINARY_DIR}/imageformats/qtga.dll"         COPYONLY)
-            configure_file("${QT_BASEDIR}/plugins/imageformats/qwebp.dll"        "${CMAKE_BINARY_DIR}/imageformats/qwebp.dll"        COPYONLY)
-            configure_file("${QT_BASEDIR}/plugins/platforms/qwindows.dll"        "${CMAKE_BINARY_DIR}/platforms/qwindows.dll"        COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Core.dll"       "${CMAKE_BINARY_DIR}/Qt6Core.dll"       COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Gui.dll"        "${CMAKE_BINARY_DIR}/Qt6Gui.dll"        COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Widgets.dll"    "${CMAKE_BINARY_DIR}/Qt6Widgets.dll"    COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Network.dll"    "${CMAKE_BINARY_DIR}/Qt6Network.dll"    COPYONLY)
+            configure_file("${QT_BASEDIR}/bin/Qt6Multimedia.dll" "${CMAKE_BINARY_DIR}/Qt6Multimedia.dll" COPYONLY)
+
+            configure_file("${QT_BASEDIR}/plugins/imageformats/qjpeg.dll" "${CMAKE_BINARY_DIR}/imageformats/qjpeg.dll" COPYONLY)
+            configure_file("${QT_BASEDIR}/plugins/imageformats/qtga.dll"  "${CMAKE_BINARY_DIR}/imageformats/qtga.dll"  COPYONLY)
+            configure_file("${QT_BASEDIR}/plugins/imageformats/qwebp.dll" "${CMAKE_BINARY_DIR}/imageformats/qwebp.dll" COPYONLY)
+
+            configure_file("${QT_BASEDIR}/plugins/multimedia/ffmpegmediaplugin.dll" "${CMAKE_BINARY_DIR}/multimedia/ffmpegmediaplugin.dll" COPYONLY)
+
+            configure_file("${QT_BASEDIR}/plugins/platforms/qwindows.dll" "${CMAKE_BINARY_DIR}/platforms/qwindows.dll" COPYONLY)
+
             configure_file("${QT_BASEDIR}/plugins/styles/qwindowsvistastyle.dll" "${CMAKE_BINARY_DIR}/styles/qwindowsvistastyle.dll" COPYONLY)
         endif()
     elseif(UNIX)
-        configure_file("${QT_BASEDIR}/lib/libQt6Core.so.6"    "${CMAKE_BINARY_DIR}/libQt6Core.so.6"    COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6Gui.so.6"     "${CMAKE_BINARY_DIR}/libQt6Gui.so.6"     COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6Widgets.so.6" "${CMAKE_BINARY_DIR}/libQt6Widgets.so.6" COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6DBus.so.6"    "${CMAKE_BINARY_DIR}/libQt6DBus.so.6"    COPYONLY)
+        configure_file("${QT_BASEDIR}/lib/libQt6Core.so.6"       "${CMAKE_BINARY_DIR}/libQt6Core.so.6"       COPYONLY)
+        configure_file("${QT_BASEDIR}/lib/libQt6Gui.so.6"        "${CMAKE_BINARY_DIR}/libQt6Gui.so.6"        COPYONLY)
+        configure_file("${QT_BASEDIR}/lib/libQt6Widgets.so.6"    "${CMAKE_BINARY_DIR}/libQt6Widgets.so.6"    COPYONLY)
+        configure_file("${QT_BASEDIR}/lib/libQt6Network.so.6"    "${CMAKE_BINARY_DIR}/libQt6Network.so.6"    COPYONLY)
+        configure_file("${QT_BASEDIR}/lib/libQt6Multimedia.so.6" "${CMAKE_BINARY_DIR}/libQt6Multimedia.so.6" COPYONLY)
+        configure_file("${QT_BASEDIR}/lib/libQt6DBus.so.6"       "${CMAKE_BINARY_DIR}/libQt6DBus.so.6"       COPYONLY)
 
         configure_file("${QT_BASEDIR}/lib/libQt6WaylandClient.so.6" "${CMAKE_BINARY_DIR}/libQt6WaylandClient.so.6" COPYONLY)
         configure_file("${QT_BASEDIR}/lib/libQt6XcbQpa.so.6"        "${CMAKE_BINARY_DIR}/libQt6XcbQpa.so.6"        COPYONLY)
@@ -193,6 +209,8 @@ if(VPKTOOL_BUILD_GUI)
         configure_file("${QT_BASEDIR}/plugins/imageformats/libqjpeg.so" "${CMAKE_BINARY_DIR}/imageformats/libqjpeg.so" COPYONLY)
         configure_file("${QT_BASEDIR}/plugins/imageformats/libqtga.so"  "${CMAKE_BINARY_DIR}/imageformats/libqtga.so"  COPYONLY)
         configure_file("${QT_BASEDIR}/plugins/imageformats/libqwebp.so" "${CMAKE_BINARY_DIR}/imageformats/libqwebp.so" COPYONLY)
+
+        configure_file("${QT_BASEDIR}/plugins/multimedia/libffmpegmediaplugin.so" "${CMAKE_BINARY_DIR}/multimedia/libffmpegmediaplugin.so" COPYONLY)
 
         configure_file("${QT_BASEDIR}/plugins/platforms/libqwayland-generic.so" "${CMAKE_BINARY_DIR}/platforms/libqwayland-generic.so" COPYONLY)
         configure_file("${QT_BASEDIR}/plugins/platforms/libqminimal.so"         "${CMAKE_BINARY_DIR}/platforms/libqminimal.so"         COPYONLY)

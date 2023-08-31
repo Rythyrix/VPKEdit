@@ -10,6 +10,7 @@ class VPK;
 
 } // namespace vpktool
 
+class AudioPreview;
 class DirPreview;
 class ImagePreview;
 class TextPreview;
@@ -33,11 +34,13 @@ public:
 private:
     Window* window;
 
+    AudioPreview* audioPreview;
     DirPreview* dirPreview;
     ImagePreview* imagePreview;
     TextPreview* textPreview;
     VTFPreview* vtfPreview;
 
+    void setAudioPreviewVisible();
     void setDirPreviewVisible();
     void setImagePreviewVisible();
     void setTextPreviewVisible();

@@ -10,7 +10,7 @@ on:
 env:
   BUILD_DIR: ${{github.workspace}}/build
   QT_VERSION: '6.5.2'
-  QT_MODULES: 'qtimageformats'
+  QT_MODULES: 'qtimageformats qtmultimedia'
 
 jobs:
   build-msvc:
@@ -60,6 +60,7 @@ jobs:
             ${{env.BUILD_DIR}}/vpktool.exe
             ${{env.BUILD_DIR}}/*.dll
             ${{env.BUILD_DIR}}/imageformats/*.dll
+            ${{env.BUILD_DIR}}/multimedia/*.dll
             ${{env.BUILD_DIR}}/platforms/*.dll
             ${{env.BUILD_DIR}}/styles/*.dll
           retention-days: 7
@@ -133,6 +134,7 @@ jobs:
             ${{env.BUILD_DIR}}/vpktool
             ${{env.BUILD_DIR}}/*.so*
             ${{env.BUILD_DIR}}/imageformats/*.so*
+            ${{env.BUILD_DIR}}/multimedia/*.so*
             ${{env.BUILD_DIR}}/platforms/*.so*
             ${{env.BUILD_DIR}}/platformthemes/*.so*
             ${{env.BUILD_DIR}}/styles/*.so*
